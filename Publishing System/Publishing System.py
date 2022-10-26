@@ -508,3 +508,302 @@ def build_gui_transfer_transforms():
 
     # Main GUI Ends Here =================================================================================
 
+
+# Creates Help GUI
+def build_gui_help_transfer_transforms():
+    """
+    Builds the help window
+    """
+    window_name = 'build_gui_help_transfer_transforms'
+    if cmds.window(window_name, exists=True):
+        cmds.deleteUI(window_name, window=True)
+
+    cmds.window(window_name, title=script_name + ' Help', mnb=False, mxb=False, s=True)
+    cmds.window(window_name, e=True, s=True, wh=[1, 1])
+
+    cmds.columnLayout('main_column', p=window_name)
+
+    # Title Text
+    cmds.separator(h=12, style='none')  # Empty Space
+    cmds.rowColumnLayout(nc=1, cw=[(1, 310)], cs=[(1, 10)], p='main_column')  # Window Size Adjustment
+    cmds.rowColumnLayout(nc=1, cw=[(1, 300)], cs=[(1, 10)], p='main_column')  # Title Column
+    cmds.text(script_name + ' Help', bgc=[.4, .4, .4], fn='boldLabelFont', align='center')
+    cmds.separator(h=10, style='none', p='main_column')  # Empty Space
+
+    cmds.rowColumnLayout(nc=1, cw=[(1, 300)], cs=[(1, 10)], p='main_column')
+    cmds.text(l='This script quickly transfer', align='center')
+    cmds.text(l='Translate, Rotate, and Scale', align='center')
+    cmds.text(l='between objects.', align='center')
+
+    cmds.separator(h=15, style='none')  # Empty Space
+    cmds.text(l='Transfer (Source/Targets):', align='left', fn='boldLabelFont')
+    cmds.text(l='1. Select Source 1st', align='left')
+    cmds.text(l='2. Select Targets 2nd,3rd...', align='left')
+    cmds.text(l='3. Select which transforms to transfer (or maybe invert)', align='left')
+    cmds.separator(h=15, style='none')  # Empty Space
+    cmds.text(l='Transfer from one side to the other:', align='left', fn='boldLabelFont')
+    cmds.text(l='"From Right to Left" and "From Left To Right" functions.', align='left')
+    cmds.text(l='1. Select all elements', align='left')
+    cmds.text(l='2. Select which transforms to transfer (or maybe invert)', align='left')
+    cmds.text(l='3. Select one of the "From > To" options:', align='left')
+    cmds.text(l='e.g. "From Right to Left" : Copy transforms from objects', align='left')
+    cmds.text(l='with the provided prefix "Right Side Tag" to objects ', align='left')
+    cmds.text(l='with the provided prefix "Left Side Tag".', align='left')
+    cmds.separator(h=15, style='none')  # Empty Space
+    cmds.text(l='Copy and Paste Transforms:', align='left', fn='boldLabelFont')
+    cmds.text(l='As the name suggests, it copy transforms, which', align='left')
+    cmds.text(l='populates the text fields, or it pastes transforms', align='left')
+    cmds.text(l='from selected fields back to selected objects.', align='left')
+    cmds.text(l='', align='left')
+    cmds.text(l='Export and Import Transforms:', align='left', fn='boldLabelFont')
+    cmds.text(l='Exports a file containing Translate, Rotate, and Scale\ndata for every selected object.', align='left')
+    cmds.text(l='When importing, it tries to find the same elements\nto apply the exported data.', align='left')
+    cmds.separator(h=15, style='none')  # Empty Space
+    cmds.rowColumnLayout(nc=2, cw=[(1, 140), (2, 140)], cs=[(1, 10), (2, 0)], p='main_column')
+    cmds.rowColumnLayout(nc=2, cw=[(1, 140), (2, 140)], cs=[(1, 10), (2, 0)], p="main_column")
+    cmds.separator(h=15, style='none')  # Empty Space
+    cmds.separator(h=7, style='none')  # Empty Space
+
+    # Close Button 
+    cmds.rowColumnLayout(nc=1, cw=[(1, 300)], cs=[(1, 10)], p='main_column')
+    cmds.separator(h=10, style='none')
+    cmds.button(l='OK', h=30, c=lambda args: close_help_gui())
+    cmds.separator(h=8, style='none')
+
+    # Show and Lock Window
+    cmds.showWindow(window_name)
+    cmds.window(window_name, e=True, s=False)
+
+    # Set Window Icon
+    qw = OpenMayaUI.MQtUtil.findWindow(window_name)
+    widget = wrapInstance(int(qw), QWidget)
+    icon = QIcon(':/question.png')
+    widget.setWindowIcon(icon)
+
+    def close_help_gui():
+        """
+        Closes Help GUI 
+        """
+        if cmds.window(window_name, exists=True):
+            cmds.deleteUI(window_name, window=True)
+
+
+def parse_text_field(textfield_data):
+    """
+    Parses the text from a textfield returning a list of every word (no spaces)
+    
+            Returns:
+                return_list (list): A list with all the provided words (split character is ",")
+    
+    """
+    text_field_data_no_spaces = textfield_data.replace(' ', '')
+    if len(text_field_data_no_spaces) <= 0:
+        return []
+    else:
+        return_list = text_field_data_no_spaces.split(',')
+        empty_objects = []
+        for obj in return_list:
+            if '' == obj:
+                empty_objects.append(obj)
+        for obj in empty_objects:
+            return_list.remove(obj)
+        return return_list
+
+
+def export_trs_transforms():
+    """
+    Exports a JSON file containing the translation, rotation and scale data from every selected object
+    """
+
+    def get_short_name(name):
+        """
+        Get the name of the objects without its path (Maya returns full path if name is not unique)
+        Args:
+            name (string) - object to extract short name
+        """
+        short_name = ''
+        if obj == '':
+            return ''
+        split_path = name.split('|')
+        if len(split_path) >= 1:
+            short_name = split_path[len(split_path) - 1]
+        return short_name
+
+# ### Start Export TRS Transforms ###
+    is_valid = False
+    successfully_created_file = False
+
+    if len(cmds.ls(selection=True)) != 0:
+        is_valid = True
+    else:
+        cmds.warning('Nothing selected. Please select at least one object and try again.')
+
+    pose_file = ''
+    if is_valid:
+        file_name = cmds.fileDialog2(fileFilter=script_name + " - JSON File (*.json)", dialogStyle=2,
+                                     okCaption='Export', caption='Exporting TRS for Selected Objects') or []
+        if len(file_name) > 0:
+            pose_file = file_name[0]
+            successfully_created_file = True
+
+    if successfully_created_file and is_valid:
+        export_dict = {'gt_transfer_transforms_version': script_version}
+        for obj in cmds.ls(selection=True):
+            translate = cmds.getAttr(obj + '.translate')[0]
+            rotate = cmds.getAttr(obj + '.rotate')[0]
+            scale = cmds.getAttr(obj + '.scale')[0]
+            to_save = [get_short_name(obj), translate, rotate, scale]
+            export_dict[obj] = to_save
+
+        try:
+            with open(pose_file, 'w') as outfile:
+                json.dump(export_dict, outfile, indent=4)
+
+            unique_message = '<' + str(random.random()) + '>'
+            cmds.inViewMessage(
+                amg=unique_message + '<span style=\"color:#FF0000;text-decoration:underline;\">'
+                                     'Transforms</span><span style=\"color:#FFFFFF;\"> exported.</span>',
+                pos='botLeft', fade=True, alpha=.9)
+            sys.stdout.write('Transforms exported to the file "' + pose_file + '".')
+        except Exception as e:
+            successfully_created_file = False
+            logger.debug('successfully_created_file: ' + str(successfully_created_file))
+            logger.info(str(e))
+            cmds.warning("Couldn't write to file. Please make sure the exporting directory is accessible.")
+
+
+def import_trs_transforms():
+    """
+    Imports a JSON file containing the translation, rotation and scale data for every object in the import list
+   
+    """
+
+    def set_unlocked_attr(target, attr, value):
+        """
+        Sets an attribute to the provided value in case it's not locked (Uses "cmds.setAttr" function so object space)
+        
+        Args:
+            target (string): Name of the target object (object that will receive transforms)
+            attr (string): Name of the attribute to apply (no need to add ".", e.g. "rx" would be enough)
+            value (float): Value used to set attribute. e.g. 1.5, 2, 5...
+        Returns:
+            error_message(string): Error message. (Returns nothing if there were no errors)
+        
+        """
+        if not cmds.getAttr(target + '.' + attr, lock=True):
+            cmds.setAttr(target + '.' + attr, value)
+        else:
+            return str(target) + ' (' + attr + ') is locked.'
+
+    file_name = cmds.fileDialog2(fileFilter=script_name + " - JSON File (*.json)", dialogStyle=2, fileMode=1,
+                                 okCaption='Import', caption='Importing Transforms for "' + script_name + '"') or []
+
+    if len(file_name) > 0:
+        pose_file = file_name[0]
+        file_exists = True
+    else:
+        file_exists = False
+        pose_file = ''
+
+    if file_exists:
+        try:
+            with open(pose_file) as json_file:
+                data = json.load(json_file)
+                try:
+                    if not data.get('gt_transfer_transforms_version'):
+                        cmds.warning("Imported file doesn't seem to be compatible or is missing data.")
+                    else:
+                        import_version = float(re.sub("[^0-9]", "", str(data.get('gt_transfer_transforms_version'))))
+                        logger.debug(str(import_version))
+
+                    failed_imports = []
+                    set_attr_responses = []
+
+                    for obj in data:
+                        if obj != 'gt_transfer_transforms_version':
+                            # General Vars
+                            found = False
+                            found_obj = ''
+                            long_name = obj
+                            short_name = data.get(obj)[0]
+                            t_data = data.get(obj)[1]
+                            r_data = data.get(obj)[2]
+                            s_data = data.get(obj)[3]
+
+                            if cmds.objExists(long_name):
+                                found_obj = long_name
+                                found = True
+
+                            if not found and cmds.objExists(short_name):
+                                found_obj = short_name
+                                found = True
+
+                            # Apply Data
+                            if found:
+                                set_attr_responses.append(set_unlocked_attr(found_obj, 'tx', t_data[0]))
+                                set_attr_responses.append(set_unlocked_attr(found_obj, 'ty', t_data[1]))
+                                set_attr_responses.append(set_unlocked_attr(found_obj, 'tz', t_data[2]))
+
+                                set_attr_responses.append(set_unlocked_attr(found_obj, 'rx', r_data[0]))
+                                set_attr_responses.append(set_unlocked_attr(found_obj, 'ry', r_data[1]))
+                                set_attr_responses.append(set_unlocked_attr(found_obj, 'rz', r_data[2]))
+
+                                set_attr_responses.append(set_unlocked_attr(found_obj, 'sx', s_data[0]))
+                                set_attr_responses.append(set_unlocked_attr(found_obj, 'sy', s_data[1]))
+                                set_attr_responses.append(set_unlocked_attr(found_obj, 'sz', s_data[2]))
+                            else:
+                                failed_imports.append([short_name, long_name])
+
+                    errors = []
+                    for response in set_attr_responses:
+                        if response:
+                            errors.append(response)
+
+                    if len(errors) != 0:
+                        unique_message = '<' + str(random.random()) + '>'
+                        if len(response) == 1:
+                            is_plural = ' attribute was '
+                        else:
+                            is_plural = ' attributes were '
+                        unique_message += '<span style=\"color:#FF0000;text-decoration:underline;\">'
+                        unique_message += str(len(errors))
+                        unique_message += '</span><span style=\"color:#FFFFFF;\"> locked' + is_plural
+                        unique_message += 'ignored. (Open Script Editor to see a list)</span>'
+                        cmds.inViewMessage(amg=unique_message, pos='botLeft', fade=True, alpha=.9)
+                        sys.stdout.write(
+                            str(len(errors)) + ' locked ' + is_plural + 'ignored. (Open Script Editor to see a list)\n')
+                        for error in errors:
+                            print(str(error))
+
+                    if failed_imports:
+                        cmds.warning('Not all transforms were imported, because not all objects were found. '
+                                     'See script editor for more info.')
+                        print('#' * 80)
+                        print("The following objects couldn't be found in the scene:")
+                        for obj in failed_imports:
+                            if obj[0] != obj[1]:
+                                print(obj[0] + ' (Long name: "' + obj[1] + '").')
+                            else:
+                                print(obj[0])
+                        print('#' * 80)
+                    unique_message = '<' + str(random.random()) + '>'
+                    cmds.inViewMessage(
+                        amg=unique_message + '<span style=\"color:#FF0000;text-decoration:underline;\">'
+                                             'Transforms</span><span style=\"color:#FFFFFF;\"> imported!</span>',
+                        pos='botLeft', fade=True, alpha=.9)
+                    sys.stdout.write('Transforms imported from the file "' + pose_file + '".')
+
+                except Exception as e:
+                    logger.info(str(e))
+                    cmds.warning('An error occurred when importing the pose. '
+                                 'Make sure you imported the correct JSON file. (Click on "Help" for more info)')
+        except Exception as e:
+            file_exists = False
+            logger.info(str(e))
+            logger.info('file_exists: ' + str(file_exists))
+            cmds.warning("Couldn't read the file. Please make sure the selected file is accessible.")
+
+
+# Build UI
+if __name__ == '__main__':
+    build_gui_transfer_transforms()
