@@ -17,29 +17,6 @@ import json
 import sys
 import re
 
-"""
-window1 = mc.window(title="Publishing System", widthHeight=(400,400))
-cmds.columnLayout(adjustableColumn=True)
-cmds.button(label="Sync current file")
-cmds.button(label="Save the selected object")
-cmds.text(" ")
-cmds.text(" ")
-cmds.text(label="File Publishing", fn="boldLabelFont")
-cmds.text(" ")
-cmds.text(label="Selected File Publishing")
-
-o = mc.optionMenu(label = "File Format") # Create options menu
-cmds.menuItem(label = "USD", parent = o) # Add to menu content USD
-cmds.menuItem(label = "Almembic", parent = o) # Add to menu content Almembic
-cmds.menuItem(label = "FBX", parent = o) # Add to menu content FBX
-cmds.button(label = "Publish", w=100, h=50, command='mc.showWindow(window2)')
-cmds.showWindow(window1)
-
-window2 = mc.window(title="ProgressBar", widthHeight=(300,150))
-cmds.columnLayout(adjustableColumn=True)
-progressControl = mc.progressBar(maxValue = 6, width = 300)
-cmds.button(label = "Close", command = "mc.progressBar(progressControl, edit = True, step = 2)")
-"""
 # Logging Setup
 logging.basicConfig()
 logger = logging.getLogger("gt_transfer_transforms")
