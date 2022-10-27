@@ -23,7 +23,7 @@ logger = logging.getLogger("gt_transfer_transforms")
 logger.setLevel(logging.INFO)
 
 # Script Name
-script_name = 'Transfer Transforms'
+script_name = 'Save_Publish System'
 
 # Stored Values Dict - Get/Set Function
 gt_transfer_transforms_dict = {'tx': 0.0,
@@ -38,7 +38,6 @@ gt_transfer_transforms_dict = {'tx': 0.0,
                                'sy': 1.0,
                                'sz': 1.0,
                                }
-
 
 # Main Form ============================================================================
 def build_gui_transfer_transforms():
@@ -249,7 +248,7 @@ def build_gui_transfer_transforms():
         transforms.append(sz)
         return transforms
 
-        # Main Function Starts --------------------------------------------
+    # Main Function Starts --------------------------------------------
     def transfer_transforms():
         """
         Transfer the transforms from source to target according to provided settings
@@ -294,7 +293,6 @@ def build_gui_transfer_transforms():
             cmds.warning('Select source 1st, then targets 2nd, 3rd...')
 
     # Main Function Ends --------------------------------------------
-
     def transfer_transforms_side_to_side(source_side):
         """
         Uses the naming convention to pair elements and mirror transforms
@@ -606,7 +604,7 @@ def export_trs_transforms():
             short_name = split_path[len(split_path) - 1]
         return short_name
 
-# ### Start Export TRS Transforms ###
+    ### Start Export TRS Transforms ###
     is_valid = False
     successfully_created_file = False
 
