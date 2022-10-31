@@ -1,16 +1,18 @@
 
 import maya.cmds as cmds
 import sys
+import os
 
 def buttonFunction(args):
 
     cmds.polyCube()
 
 def buttonFunction1(args):
-  
-	sys.path.append("Users/mine/Desktop/3D Animation/Assessment2_GroupX/scenes/")
+    
+    #path = 'Users/mine/Desktop/3D Animation/Assessment2_GroupX/scenes/'
+	#sys.path.append("Users/mine/Desktop/3D Animation/Assessment2_GroupX/scenes/")
 	multipleFilters =  "All native importable files (*.ma *.mb *.obj *.fbx *.abc);; Maya binary (*.mb);; Maya Ascii 	(*.ma);; Obj (*.obj);; FBX (*.fbx);; Alembic Cache (*.abc)"
-	files = cmds.fileDialog2(caption = 'Choose files to import', ds = 2, fileMode = 4, okCaption = 'Choose files', 	fileFilter = multipleFilters)
+	files = cmds.fileDialog2(caption = 'Scene Builder', ds = 2, fileMode = 4, okCaption = 'Load', 	fileFilter = multipleFilters)
 
 	fbxFiles = []
 	objFiles = []
@@ -52,16 +54,17 @@ def buttonFunction1(args):
 
 			cmds.AbcImport(str(x), mode = 'import')
 
-	sys.stdout.write('All files imported.\n')
+	sys.stdout.write('Users/mine/Desktop/3D Animation/Assessment2_GroupX/scenes/')
 
     
 def showUI():
-    myWin = cmds.window(title="Sence builder", widthHeight=(200, 200))
-
-    cmds.columnLayout()
+    cmds.window(title="Sence builder", widthHeight=(200, 200))
+  
+    cmds.columnLayout(adjustableColumn = True)
+    cmds.separator(height=20)
     cmds.button(label="Make Cube", command=buttonFunction)
     cmds.button(label="Load",command=buttonFunction1)
-    cmds.showWindow(myWin)
+    cmds.showWindow()
     
     
     
