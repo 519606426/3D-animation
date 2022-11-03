@@ -1,19 +1,16 @@
-
 import maya.cmds as cmds
-import sys
-import os
 
-def buttonFunction(args):
-
-    cmds.polyCube()
-
-def buttonFunction1(args):
+def buttonFunction_select(args):
+   
     
     #path = 'Users/mine/Desktop/3D Animation/Assessment2_GroupX/scenes/'
 	#sys.path.append("Users/mine/Desktop/3D Animation/Assessment2_GroupX/scenes/")
 	multipleFilters =  "All native importable files (*.ma *.mb *.obj *.fbx *.abc);; Maya binary (*.mb);; Maya Ascii 	(*.ma);; Obj (*.obj);; FBX (*.fbx);; Alembic Cache (*.abc)"
 	files = cmds.fileDialog2(caption = 'Scene Builder', ds = 2, fileMode = 4, okCaption = 'Load', 	fileFilter = multipleFilters)
-
+    #sys.path.append('Users/mine/Desktop/3D Animation/Assessment2_GroupX/scenes')
+        #os.path.commonprefix(['Users/mine/Desktop/3D Animation/Assessment2_GroupX/scenes'])
+     
+    
 	fbxFiles = []
 	objFiles = []
 	abcFiles = []
@@ -54,22 +51,30 @@ def buttonFunction1(args):
 
 			cmds.AbcImport(str(x), mode = 'import')
 
-	sys.stdout.write('Users/mine/Desktop/3D Animation/Assessment2_GroupX/scenes/')
 
+def buttonFunction_animation(args):
+    cmds.file("scenes/wip/sequence/lng01/lng01_010/animation/lng01_010_anim.v003.mb", i=True)
+#    cmds.file("scenes/publish/sequence/lng01/lng01_010/animation/source/lng01_010_anim.v003.mb", i=True)
     
+def buttonFunction_layout(args):        
+#    cmds.file("scenes/publish/sequence/lng01/lng01_010/layout/cache/alembic/lng01_010_layout.v002.abc", i=True)
+    cmds.file("scenes/wip/sequence/lng01/lng01_010/layout/lng01_010_layout.v002.mb", i=True)
+def buttonFunction_Light(args):
+    cmds.file("scenes/wip/sequence/lng01/lng01_010/light/lng01_010_light.v002.mb", i=True)
+
 def showUI():
+
     cmds.window(title="Sence builder", widthHeight=(200, 200))
   
     cmds.columnLayout(adjustableColumn = True)
     cmds.separator(height=20)
-    cmds.button(label="Make Cube", command=buttonFunction)
-    cmds.button(label="Load",command=buttonFunction1)
+    cmds.text("Load")
+    cmds.button(label="Select",command=buttonFunction_select)
+    cmds.button(label="Animation",command=buttonFunction_animation)
+    cmds.button(label="Layout",command=buttonFunction_layout)
+   # cmds.button(label="Light",command=buttonFunction_Light)
     cmds.showWindow()
     
     
     
 showUI()
-
-
-
-
